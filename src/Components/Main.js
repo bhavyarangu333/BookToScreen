@@ -6,48 +6,44 @@ const Main = () => {
     const [search, setSearch] = useState("");
     const [bookData, setBookData] = useState([]);
     const [movieData, setMovieData] = useState([]);
+    const [moviesLoaded, setMoviesLoaded] = useState(false);
 
-    // Search for books (triggered by "Enter" key or button click)
     const searchBook = () => {
         if (search.trim()) {
-            console.log(`Searching for book: ${search}`); // Debug log
             axios
                 .get(
                     `https://www.googleapis.com/books/v1/volumes?q=${search}&key=AIzaSyA6SaT23KNiiA6DnUfUQTvFeyAcQEkwnSU&maxResults=40`
                 )
                 .then((res) => {
-                    console.log('Book search response:', res); // Debug log
                     setBookData(res.data.items);
+                    setMoviesLoaded(false);  // Ensure movies are hidden
                 })
                 .catch((err) => {
-                    console.error('Error fetching books:', err); // Debug log
+                    console.error("Error fetching books:", err);
                 });
         }
     };
 
-    // Fetch movies related to the book name
     const fetchMovie = () => {
         if (search.trim()) {
-            console.log(`Fetching movies related to: ${search}`); // Debug log
             axios
                 .get(`https://www.omdbapi.com/?s=${search}&apikey=e2f87639`)
                 .then((res) => {
-                    console.log('Movie search response:', res); // Debug log
                     if (res.data.Search) {
                         setMovieData(res.data.Search);
-                        console.log('Updated movie data:', res.data.Search); // Debug log
+                        setMoviesLoaded(true);
                     } else {
                         setMovieData([]);
+                        setMoviesLoaded(false);
                         alert("No movies found related to this book name.");
                     }
                 })
                 .catch((err) => {
-                    console.error('Error fetching movies:', err); // Debug log
+                    console.error("Error fetching movies:", err);
                 });
         }
     };
 
-    // Search for books when the user presses the Enter key
     const handleKeyPress = (evt) => {
         if (evt.key === "Enter") {
             searchBook();
@@ -84,11 +80,13 @@ const Main = () => {
                 </div>
             </div>
 
-            <div className="container">
-                <Card book={bookData} />
-            </div>
+            {bookData.length > 0 && !moviesLoaded && (
+                <div className="container">
+                    <Card book={bookData} />
+                </div>
+            )}
 
-            {movieData.length > 0 && (
+            {moviesLoaded && movieData.length > 0 && (
                 <div className="movies">
                     <h2>Movies Related to "{search}"</h2>
                     <div className="movie-list">
